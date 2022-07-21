@@ -10,7 +10,7 @@ pub enum ASTNode {
     CallExpression(String, Vec<ASTNode>),
 }
 
-fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Option<ASTNode> {
+pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Option<ASTNode> {
     match tokens.next()? {
         Token::Number(number) => Some(ASTNode::NumberLiteral(number)),
         Token::Name(name) => Some(ASTNode::Identifier(name)),
@@ -27,7 +27,6 @@ fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Option<ASTNod
             let mut arguments: Vec<ASTNode> = vec![];
 
             while let Some(next_token) = tokens.peek() {
-                println!("next_token: {:?}", next_token);
                 if Token::ClosingParenthesis != *next_token {
                     if let Some(argument) = parse_node(tokens) {
                         arguments.push(argument);
