@@ -34,6 +34,10 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 tokens.push(Token::ClosingParenthesis);
             }
 
+            '-' => {
+                tokens.push(Token::NegativeSymbol);
+            }
+
             _ => {
                 let mut name = String::from(character);
 
@@ -57,9 +61,9 @@ pub fn tokenize(input: &str) -> Vec<Token> {
 pub enum Token {
     OpeningParenthesis,
     ClosingParenthesis,
+    NegativeSymbol,
 
     Number(i64),
-
     Name(String),
 }
 

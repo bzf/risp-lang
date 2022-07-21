@@ -17,6 +17,17 @@ pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<AS
 
             Token::Name(name) => Ok(ASTNode::Identifier(name)),
 
+            Token::NegativeSymbol => {
+                if let Ok(ASTNode::NumberLiteral(number)) = parse_node(tokens) {
+                    Ok(ASTNode::NumberLiteral(-number))
+                } else {
+                    return Err(Error::new(
+                        "Expected a number followed by a - symbol",
+                        ErrorType::UnexpectedToken(token),
+                    ));
+                }
+            }
+
             Token::OpeningParenthesis => {
                 let identifier = {
                     if let Ok(ASTNode::Identifier(name)) = parse_node(tokens) {
@@ -56,6 +67,18 @@ pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<AS
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_parsing_negative_number_literals() {
+        assert_eq!(
+            parse_node(
+                &mut vec![Token::NegativeSymbol, Token::Number(123)]
+                    .into_iter()
+                    .peekable()
+            ),
+            Ok(ASTNode::NumberLiteral(-123))
+        )
+    }
 
     #[test]
     fn test_parsing_number_literal() {
