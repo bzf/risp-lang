@@ -28,7 +28,20 @@ pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<AS
                 }
             }
 
-            Token::OpeningParenthesis => parse_call_expression(tokens),
+            Token::OpeningParenthesis => {
+                if let Some(token) = tokens.peek() {
+                    match token {
+                        Token::Name(_name) => parse_call_expression(tokens),
+
+                        _ => Err(Error::new(
+                            "Unexpected token",
+                            ErrorType::UnexpectedToken(token.clone()),
+                        )),
+                    }
+                } else {
+                    return Err(Error::new("Expected more tokens", ErrorType::MissingToken));
+                }
+            }
 
             _ => Err(Error::new(
                 "Unexpected token",
