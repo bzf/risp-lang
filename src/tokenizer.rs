@@ -11,7 +11,7 @@ pub fn tokenize(input: &str) -> Vec<Token> {
             let mut number_string = String::from(character);
 
             while let Some(next_character) = cursor.peek() {
-                if next_character.is_numeric() && *next_character != ')' {
+                if next_character.is_numeric() && *next_character != ')' && *next_character != ']' {
                     number_string.push(cursor.next().unwrap());
                 } else {
                     break;
@@ -34,6 +34,14 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 tokens.push(Token::ClosingParenthesis);
             }
 
+            '[' => {
+                tokens.push(Token::OpeningBracket);
+            }
+
+            ']' => {
+                tokens.push(Token::ClosingBracket);
+            }
+
             '-' => {
                 tokens.push(Token::NegativeSymbol);
             }
@@ -42,14 +50,21 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 let mut name = String::from(character);
 
                 while let Some(next_character) = cursor.peek() {
-                    if !next_character.is_whitespace() && *next_character != ')' {
+                    if !next_character.is_whitespace()
+                        && *next_character != ')'
+                        && *next_character != ']'
+                    {
                         name.push(cursor.next().unwrap());
                     } else {
                         break;
                     }
                 }
 
-                tokens.push(Token::Name(name));
+                if name == "defn" {
+                    tokens.push(Token::DefnKeyword);
+                } else {
+                    tokens.push(Token::Name(name));
+                }
             }
         }
     }
@@ -57,11 +72,15 @@ pub fn tokenize(input: &str) -> Vec<Token> {
     return tokens;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     OpeningParenthesis,
     ClosingParenthesis,
     NegativeSymbol,
+    OpeningBracket,
+    ClosingBracket,
+
+    DefnKeyword,
 
     Number(i64),
     Name(String),
@@ -76,6 +95,21 @@ mod tests {
         assert_eq!(
             tokenize("()"),
             vec![Token::OpeningParenthesis, Token::ClosingParenthesis,]
+        )
+    }
+
+    #[test]
+    fn test_parsing_parameter_list() {
+        assert_eq!(
+            tokenize("defn [a b c]"),
+            vec![
+                Token::DefnKeyword,
+                Token::OpeningBracket,
+                Token::Name("a".to_string()),
+                Token::Name("b".to_string()),
+                Token::Name("c".to_string()),
+                Token::ClosingBracket,
+            ]
         )
     }
 
