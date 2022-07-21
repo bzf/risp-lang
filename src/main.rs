@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use risp::ASTNode;
+use risp::Value;
 
 fn prompt(name: &str) -> String {
     let mut line = String::new();
@@ -25,15 +25,8 @@ pub fn main() {
 
         if let Some(value) = risp::parse_and_evaluate(&expression) {
             match value {
-                ASTNode::NumberLiteral(number) => println!("{}", number),
-
-                ASTNode::CallExpression(ref _name, ref _arguments) => {
-                    println!("{:?}", value);
-                }
-
-                _ => {
-                    println!("That doesn't look like anything to me.");
-                }
+                Value::Number(number) => println!("{}", number),
+                _ => println!("nil"),
             }
         } else {
             println!("That doesn't look like anything to me.");
