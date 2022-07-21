@@ -1,4 +1,4 @@
-use crate::Token;
+use crate::{Token, Type};
 
 #[derive(Debug, PartialEq)]
 pub struct Error {
@@ -15,4 +15,10 @@ impl Error {
 pub enum ErrorType {
     UnexpectedToken(Token),
     MissingToken,
+    UndefinedFunction(String),
+    TooFewArguments,
+    TypeError {
+        expected_type: Type,
+        actual_type: Type,
+    },
 }
