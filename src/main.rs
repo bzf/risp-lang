@@ -23,13 +23,13 @@ pub fn main() {
             continue;
         }
 
-        if let Some(value) = risp::parse_and_evaluate(&expression) {
-            match value {
+        match risp::parse_and_evaluate(&expression) {
+            Ok(value) => match value {
                 Value::Number(number) => println!("{}", number),
                 _ => println!("nil"),
-            }
-        } else {
-            println!("That doesn't look like anything to me.");
+            },
+
+            Err(error) => println!("{:?}", error),
         }
     }
 }

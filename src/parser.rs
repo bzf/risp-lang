@@ -1,6 +1,6 @@
 use std::iter::Peekable;
 
-use crate::Token;
+use crate::{Error, ErrorType, Token};
 
 #[derive(Debug, PartialEq)]
 pub enum ASTNode {
@@ -10,40 +10,46 @@ pub enum ASTNode {
     CallExpression(String, Vec<ASTNode>),
 }
 
-pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Option<ASTNode> {
-    match tokens.next()? {
-        Token::Number(number) => Some(ASTNode::NumberLiteral(number)),
-        Token::Name(name) => Some(ASTNode::Identifier(name)),
+pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<ASTNode, Error> {
+    if let Some(token) = tokens.next() {
+        match token {
+            Token::Number(number) => Ok(ASTNode::NumberLiteral(number)),
 
-        Token::OpeningParenthesis => {
-            let identifier = {
-                if let Some(ASTNode::Identifier(name)) = parse_node(tokens) {
-                    name
-                } else {
-                    panic!("Expected an identifier after parsing an '('");
-                }
-            };
+            Token::Name(name) => Ok(ASTNode::Identifier(name)),
 
-            let mut arguments: Vec<ASTNode> = vec![];
-
-            while let Some(next_token) = tokens.peek() {
-                if Token::ClosingParenthesis != *next_token {
-                    if let Some(argument) = parse_node(tokens) {
-                        arguments.push(argument);
+            Token::OpeningParenthesis => {
+                let identifier = {
+                    if let Ok(ASTNode::Identifier(name)) = parse_node(tokens) {
+                        name
                     } else {
-                        break;
+                        return Err(Error::new(
+                            "Expected an identifier following '('",
+                            ErrorType::UnexpectedToken(token),
+                        ));
                     }
-                } else {
-                    break;
+                };
+
+                let mut arguments: Vec<ASTNode> = vec![];
+
+                while let Some(next_token) = tokens.peek() {
+                    if *next_token == Token::ClosingParenthesis {
+                        tokens.next().unwrap();
+                        return Ok(ASTNode::CallExpression(identifier, arguments));
+                    } else {
+                        arguments.push(parse_node(tokens)?);
+                    }
                 }
+
+                return Err(Error::new("Expected missing ')'", ErrorType::MissingToken));
             }
 
-            return Some(ASTNode::CallExpression(identifier, arguments));
+            _ => Err(Error::new(
+                "Unexpected token",
+                ErrorType::UnexpectedToken(token),
+            )),
         }
-
-        Token::ClosingParenthesis => {
-            panic!("Unexpected closing parenthesis");
-        }
+    } else {
+        return Err(Error::new("Expected more tokens", ErrorType::MissingToken));
     }
 }
 
@@ -55,7 +61,7 @@ mod tests {
     fn test_parsing_number_literal() {
         assert_eq!(
             parse_node(&mut vec![Token::Number(123)].into_iter().peekable()),
-            Some(ASTNode::NumberLiteral(123))
+            Ok(ASTNode::NumberLiteral(123))
         )
     }
 
@@ -67,7 +73,7 @@ mod tests {
                     .into_iter()
                     .peekable()
             ),
-            Some(ASTNode::Identifier("hello-there".to_string()))
+            Ok(ASTNode::Identifier("hello-there".to_string()))
         )
     }
 
@@ -79,11 +85,12 @@ mod tests {
                     Token::OpeningParenthesis,
                     Token::Name("hello-there".to_string()),
                     Token::Number(123),
+                    Token::ClosingParenthesis,
                 ]
                 .into_iter()
                 .peekable()
             ),
-            Some(ASTNode::CallExpression(
+            Ok(ASTNode::CallExpression(
                 "hello-there".to_string(),
                 vec![ASTNode::NumberLiteral(123)]
             ))
