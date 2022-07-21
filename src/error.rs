@@ -16,6 +16,7 @@ pub enum ErrorType {
     UnexpectedToken(Token),
     MissingToken,
     UndefinedFunction(String),
+    ArgumentError,
     TooFewArguments,
     TypeError {
         expected_type: Type,

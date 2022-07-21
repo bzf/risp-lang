@@ -4,7 +4,7 @@ pub enum Type {
     Nil,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Number(i64),
     Nil,

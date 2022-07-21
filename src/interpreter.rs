@@ -1,13 +1,19 @@
+use std::collections::HashMap;
+
 use crate::{ASTNode, Error, ErrorType, Value};
 
-pub struct Interpreter {}
+pub struct Interpreter {
+    variables: HashMap<String, Value>,
+}
 
 impl Interpreter {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            variables: HashMap::new(),
+        }
     }
 
-    pub fn evaluate(&self, expression: &ASTNode) -> Result<Value, Error> {
+    pub fn evaluate(&mut self, expression: &ASTNode) -> Result<Value, Error> {
         match expression {
             ASTNode::NumberLiteral(number) => Ok(Value::Number(*number)),
 
@@ -15,12 +21,18 @@ impl Interpreter {
                 return self.evaluate_call_expression(name, arguments);
             }
 
-            _ => Ok(Value::Nil),
+            ASTNode::Identifier(name) => {
+                if let Some(value) = self.variables.get(name) {
+                    return Ok(value.clone());
+                } else {
+                    return Ok(Value::Nil);
+                }
+            }
         }
     }
 
     fn evaluate_call_expression(
-        &self,
+        &mut self,
         name: &str,
         arguments: &Vec<ASTNode>,
     ) -> Result<Value, Error> {
@@ -47,6 +59,21 @@ impl Interpreter {
                 ));
             }
 
+            "define" => match &arguments[..] {
+                [ASTNode::Identifier(name), value_node] => {
+                    let value = self.evaluate(value_node)?;
+                    self.variables.insert(name.to_string(), value.clone());
+                    return Ok(value);
+                }
+
+                _ => {
+                    return Err(Error::new(
+                        "Wrong number of arguments",
+                        ErrorType::ArgumentError,
+                    ));
+                }
+            },
+
             _ => Err(Error::new(
                 "Undefined function",
                 ErrorType::UndefinedFunction(name.to_string()),
@@ -54,7 +81,7 @@ impl Interpreter {
         }
     }
 
-    fn number_arguments(&self, arguments: &Vec<ASTNode>) -> Result<Vec<i64>, Error> {
+    fn number_arguments(&mut self, arguments: &Vec<ASTNode>) -> Result<Vec<i64>, Error> {
         let values = arguments.iter().map(|argument| self.evaluate(argument));
         let mut numbers: Vec<i64> = vec![];
 
@@ -77,5 +104,22 @@ impl Interpreter {
         }
 
         return Ok(numbers);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_reading_variables() {
+        let mut interpreter = Interpreter::new();
+        interpreter
+            .variables
+            .insert("my-var".to_string(), Value::Number(3));
+
+        let result = interpreter.evaluate(&ASTNode::Identifier("my-var".to_string()));
+
+        assert_eq!(result, Ok(Value::Number(3)));
     }
 }
