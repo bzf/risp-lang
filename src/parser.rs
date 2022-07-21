@@ -1,4 +1,4 @@
-use std::iter::Peekable;
+use std::{iter::Peekable, vec::IntoIter};
 
 use crate::{Error, ErrorType, Token};
 
@@ -28,31 +28,7 @@ pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<AS
                 }
             }
 
-            Token::OpeningParenthesis => {
-                let identifier = {
-                    if let Ok(ASTNode::Identifier(name)) = parse_node(tokens) {
-                        name
-                    } else {
-                        return Err(Error::new(
-                            "Expected an identifier following '('",
-                            ErrorType::UnexpectedToken(token),
-                        ));
-                    }
-                };
-
-                let mut arguments: Vec<ASTNode> = vec![];
-
-                while let Some(next_token) = tokens.peek() {
-                    if *next_token == Token::ClosingParenthesis {
-                        tokens.next().unwrap();
-                        return Ok(ASTNode::CallExpression(identifier, arguments));
-                    } else {
-                        arguments.push(parse_node(tokens)?);
-                    }
-                }
-
-                return Err(Error::new("Expected missing ')'", ErrorType::MissingToken));
-            }
+            Token::OpeningParenthesis => parse_call_expression(tokens),
 
             _ => Err(Error::new(
                 "Unexpected token",
@@ -62,6 +38,32 @@ pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<AS
     } else {
         return Err(Error::new("Expected more tokens", ErrorType::MissingToken));
     }
+}
+
+fn parse_call_expression(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNode, Error> {
+    let identifier = {
+        if let Ok(ASTNode::Identifier(name)) = parse_node(tokens) {
+            name
+        } else {
+            return Err(Error::new(
+                "Expected an identifier following '('",
+                ErrorType::UnexpectedToken(Token::OpeningParenthesis),
+            ));
+        }
+    };
+
+    let mut arguments: Vec<ASTNode> = vec![];
+
+    while let Some(next_token) = tokens.peek() {
+        if *next_token == Token::ClosingParenthesis {
+            tokens.next().unwrap();
+            return Ok(ASTNode::CallExpression(identifier, arguments));
+        } else {
+            arguments.push(parse_node(tokens)?);
+        }
+    }
+
+    return Err(Error::new("Expected missing ')'", ErrorType::MissingToken));
 }
 
 #[cfg(test)]
