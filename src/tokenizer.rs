@@ -10,9 +10,9 @@ pub fn tokenize(input: &str) -> Vec<Token> {
         if character.is_numeric() {
             let mut number_string = String::from(character);
 
-            while let Some(next_character) = cursor.next() {
-                if next_character.is_numeric() {
-                    number_string.push(next_character);
+            while let Some(next_character) = cursor.peek() {
+                if next_character.is_numeric() && *next_character != ')' {
+                    number_string.push(cursor.next().unwrap());
                 } else {
                     break;
                 }
@@ -37,9 +37,9 @@ pub fn tokenize(input: &str) -> Vec<Token> {
             _ => {
                 let mut name = String::from(character);
 
-                while let Some(next_character) = cursor.next() {
-                    if !next_character.is_whitespace() {
-                        name.push(next_character);
+                while let Some(next_character) = cursor.peek() {
+                    if !next_character.is_whitespace() && *next_character != ')' {
+                        name.push(cursor.next().unwrap());
                     } else {
                         break;
                     }
@@ -92,6 +92,22 @@ mod tests {
                 Token::Name("my-var".to_string()),
                 Token::Name("hello-there!".to_string()),
             ]
+        )
+    }
+
+    #[test]
+    fn test_parsing_names_with_special_characters() {
+        assert_eq!(
+            tokenize("name)"),
+            vec![Token::Name("name".to_string()), Token::ClosingParenthesis]
+        )
+    }
+
+    #[test]
+    fn test_parsing_numbers_with_special_characters() {
+        assert_eq!(
+            tokenize("123)"),
+            vec![Token::Number(123), Token::ClosingParenthesis]
         )
     }
 
