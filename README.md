@@ -37,4 +37,6 @@ cargo run
 ```lisp
 > (defn hello [a] 3)
 #<Function:hello>
+> (hello 10)
+3
 ```

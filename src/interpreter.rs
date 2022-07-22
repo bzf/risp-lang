@@ -1,6 +1,6 @@
 mod environment;
 
-use std::ops::Deref;
+use std::{collections::HashMap, ops::Deref};
 
 use crate::{value::Function, ASTNode, Error, ErrorType, Value};
 use environment::EnvironmentStack;
@@ -108,11 +108,27 @@ impl Interpreter {
                         return Err(Error::new("Too few arguments", ErrorType::TooFewArguments));
                     }
 
-                    // TODO: Push the argument values onto the stack
+                    // Push the argument values onto the stack
+                    let mut values = Vec::new();
+
+                    for argument in arguments.iter() {
+                        values.push(self.evaluate(argument)?);
+                    }
+
+                    let mut arguments: HashMap<String, Value> = HashMap::new();
+
+                    for (index, key) in function.parameter_list().iter().enumerate() {
+                        let value = &values[index];
+
+                        arguments.insert(key.to_string(), value.clone());
+                    }
+
+                    self.environment_stack.push_environment(arguments);
 
                     let result = self.evaluate(&function.body().clone());
 
-                    // TODO: Pop the call stack
+                    // Pop the call stack
+                    self.environment_stack.pop_environment();
 
                     return result;
                 } else {
