@@ -1,15 +1,18 @@
-use std::{collections::HashMap, ops::Deref};
+mod environment;
+
+use std::ops::Deref;
 
 use crate::{value::Function, ASTNode, Error, ErrorType, Value};
+use environment::EnvironmentStack;
 
 pub struct Interpreter {
-    variables: HashMap<String, Value>,
+    environment_stack: EnvironmentStack,
 }
 
 impl Interpreter {
     pub fn new() -> Self {
         Self {
-            variables: HashMap::new(),
+            environment_stack: EnvironmentStack::new(),
         }
     }
 
@@ -32,14 +35,14 @@ impl Interpreter {
                     body.deref().clone(),
                 );
 
-                self.variables
-                    .insert(identifier.to_string(), Value::Function(function.clone()));
+                self.environment_stack
+                    .set(identifier, Value::Function(function.clone()));
 
                 return Ok(Value::Function(function));
             }
 
             ASTNode::Identifier(name) => {
-                if let Some(value) = self.variables.get(name) {
+                if let Some(value) = self.environment_stack.get(name) {
                     return Ok(value.clone());
                 } else {
                     return Ok(Value::Nil);
@@ -79,7 +82,7 @@ impl Interpreter {
             "define" => match &arguments[..] {
                 [ASTNode::Identifier(name), value_node] => {
                     let value = self.evaluate(value_node)?;
-                    self.variables.insert(name.to_string(), value.clone());
+                    self.environment_stack.set(name, value.clone());
                     return Ok(value);
                 }
 
@@ -92,10 +95,13 @@ impl Interpreter {
             },
 
             name => {
-                let value = self.variables.get(name).ok_or(Error::new(
-                    "Undefined",
-                    ErrorType::UndefinedFunction(name.to_string()),
-                ))?;
+                let value = {
+                    let value = self.environment_stack.get(name);
+                    value.clone().ok_or(Error::new(
+                        "Undefined",
+                        ErrorType::UndefinedFunction(name.to_string()),
+                    ))?
+                };
 
                 if let Value::Function(function) = value {
                     if function.parameter_list().len() != arguments.len() {
@@ -153,8 +159,8 @@ mod tests {
     fn test_reading_variables() {
         let mut interpreter = Interpreter::new();
         interpreter
-            .variables
-            .insert("my-var".to_string(), Value::Number(3));
+            .environment_stack
+            .set("my-var", Value::Number(3));
 
         let result = interpreter.evaluate(&ASTNode::Identifier("my-var".to_string()));
 
