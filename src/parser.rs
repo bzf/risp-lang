@@ -2,12 +2,17 @@ use std::{iter::Peekable, vec::IntoIter};
 
 use crate::{Error, ErrorType, Token};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ASTNode {
     NumberLiteral(i64),
     Identifier(String),
 
     CallExpression(String, Vec<ASTNode>),
+    FunctionDeclaration {
+        identifier: String,
+        parameter_list: Vec<String>,
+        body: Box<ASTNode>,
+    },
 }
 
 pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<ASTNode, Error> {
@@ -31,6 +36,8 @@ pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<AS
             Token::OpeningParenthesis => {
                 if let Some(token) = tokens.peek() {
                     match token {
+                        Token::DefnKeyword => parse_function_declaration(tokens),
+
                         Token::Name(_name) => parse_call_expression(tokens),
 
                         _ => Err(Error::new(
@@ -77,6 +84,59 @@ fn parse_call_expression(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNo
     }
 
     return Err(Error::new("Expected missing ')'", ErrorType::MissingToken));
+}
+
+fn parse_function_declaration(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNode, Error> {
+    let token = tokens
+        .next()
+        .ok_or(Error::new("Missing tokens", ErrorType::MissingToken))?;
+
+    assert_eq!(Token::DefnKeyword, token);
+
+    let identifier = {
+        if let Ok(ASTNode::Identifier(name)) = parse_node(tokens) {
+            name
+        } else {
+            return Err(Error::new(
+                "Expected an identifier following defn keyword",
+                ErrorType::UnexpectedToken(token),
+            ));
+        }
+    };
+
+    let mut parameter_list: Vec<String> = vec![];
+
+    {
+        let token = tokens
+            .next()
+            .ok_or(Error::new("Missing tokens", ErrorType::MissingToken))?;
+        assert_eq!(Token::OpeningBracket, token);
+    }
+
+    while let Some(next_token) = tokens.next() {
+        match next_token {
+            Token::Name(name) => {
+                parameter_list.push(name);
+            }
+
+            Token::ClosingBracket => break,
+
+            _ => {
+                return Err(Error::new(
+                    "Unexpected token",
+                    ErrorType::UnexpectedToken(next_token),
+                ));
+            }
+        }
+    }
+
+    let body = parse_node(tokens)?;
+
+    return Ok(ASTNode::FunctionDeclaration {
+        identifier,
+        parameter_list,
+        body: Box::new(body),
+    });
 }
 
 #[cfg(test)]
@@ -133,5 +193,30 @@ mod tests {
                 vec![ASTNode::NumberLiteral(123)]
             ))
         )
+    }
+
+    #[test]
+    fn test_parsing_function_declaration() {
+        assert_eq!(
+            parse_node(
+                &mut vec![
+                    Token::OpeningParenthesis,
+                    Token::DefnKeyword,
+                    Token::Name("hello-there".to_string()),
+                    Token::OpeningBracket,
+                    Token::Name("a".to_string()),
+                    Token::ClosingBracket,
+                    Token::Number(123),
+                    Token::ClosingParenthesis,
+                ]
+                .into_iter()
+                .peekable()
+            ),
+            Ok(ASTNode::FunctionDeclaration {
+                identifier: "hello-there".to_string(),
+                parameter_list: vec!["a".to_string()],
+                body: Box::new(ASTNode::NumberLiteral(123)),
+            })
+        );
     }
 }

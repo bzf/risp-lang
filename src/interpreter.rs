@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Deref};
 
-use crate::{ASTNode, Error, ErrorType, Value};
+use crate::{value::Function, ASTNode, Error, ErrorType, Value};
 
 pub struct Interpreter {
     variables: HashMap<String, Value>,
@@ -19,6 +19,23 @@ impl Interpreter {
 
             ASTNode::CallExpression(ref name, ref arguments) => {
                 return self.evaluate_call_expression(name, arguments);
+            }
+
+            ASTNode::FunctionDeclaration {
+                identifier,
+                parameter_list,
+                body,
+            } => {
+                let function = Function::new(
+                    identifier.to_string(),
+                    parameter_list.clone(),
+                    body.deref().clone(),
+                );
+
+                self.variables
+                    .insert(identifier.to_string(), Value::Function(function.clone()));
+
+                return Ok(Value::Function(function));
             }
 
             ASTNode::Identifier(name) => {

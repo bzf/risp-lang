@@ -33,3 +33,8 @@ cargo run
 > (add foo 5)
 15
 ```
+
+```lisp
+> (defn hello [a] 3)
+#<Function:hello>
+```
