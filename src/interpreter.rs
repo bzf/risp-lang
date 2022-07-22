@@ -91,10 +91,31 @@ impl Interpreter {
                 }
             },
 
-            _ => Err(Error::new(
-                "Undefined function",
-                ErrorType::UndefinedFunction(name.to_string()),
-            )),
+            name => {
+                let value = self.variables.get(name).ok_or(Error::new(
+                    "Undefined",
+                    ErrorType::UndefinedFunction(name.to_string()),
+                ))?;
+
+                if let Value::Function(function) = value {
+                    if function.parameter_list().len() != arguments.len() {
+                        return Err(Error::new("Too few arguments", ErrorType::TooFewArguments));
+                    }
+
+                    // TODO: Push the argument values onto the stack
+
+                    let result = self.evaluate(&function.body().clone());
+
+                    // TODO: Pop the call stack
+
+                    return result;
+                } else {
+                    Err(Error::new(
+                        "Not a function",
+                        ErrorType::NotAFunction(name.to_string()),
+                    ))
+                }
+            }
         }
     }
 
