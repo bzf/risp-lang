@@ -20,6 +20,8 @@ impl Interpreter {
         match expression {
             ASTNode::NumberLiteral(number) => Ok(Value::Number(*number)),
 
+            ASTNode::BooleanLiteral(value) => Ok(Value::Boolean(*value)),
+
             ASTNode::CallExpression(ref name, ref arguments) => {
                 return self.evaluate_call_expression(name, arguments);
             }

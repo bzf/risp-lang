@@ -5,6 +5,7 @@ use crate::{Error, ErrorType, Token};
 #[derive(Debug, PartialEq, Clone)]
 pub enum ASTNode {
     NumberLiteral(i64),
+    BooleanLiteral(bool),
     Identifier(String),
 
     CallExpression(String, Vec<ASTNode>),
@@ -19,6 +20,7 @@ pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<AS
     if let Some(token) = tokens.next() {
         match token {
             Token::Number(number) => Ok(ASTNode::NumberLiteral(number)),
+            Token::Boolean(value) => Ok(ASTNode::BooleanLiteral(value)),
 
             Token::Name(name) => Ok(ASTNode::Identifier(name)),
 
@@ -192,6 +194,22 @@ mod tests {
                 "hello-there".to_string(),
                 vec![ASTNode::NumberLiteral(123)]
             ))
+        )
+    }
+
+    #[test]
+    fn test_parsing_true_literals() {
+        assert_eq!(
+            parse_node(&mut vec![Token::Boolean(true)].into_iter().peekable()),
+            Ok(ASTNode::BooleanLiteral(true))
+        )
+    }
+
+    #[test]
+    fn test_parsing_false_literals() {
+        assert_eq!(
+            parse_node(&mut vec![Token::Boolean(false)].into_iter().peekable()),
+            Ok(ASTNode::BooleanLiteral(false))
         )
     }
 

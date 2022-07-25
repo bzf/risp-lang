@@ -28,7 +28,9 @@ pub fn main() {
             Ok(value) => match value {
                 Value::Number(number) => println!("{}", number),
                 Value::Function(function) => println!("#<Function:{}>", function.identifier()),
-                _ => println!("nil"),
+                Value::Boolean(value) => println!("{}", value),
+
+                Value::Nil => println!("nil"),
             },
 
             Err(error) => println!("{:?}", error),

@@ -60,10 +60,11 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                     }
                 }
 
-                if name == "defn" {
-                    tokens.push(Token::DefnKeyword);
-                } else {
-                    tokens.push(Token::Name(name));
+                match &name[..] {
+                    "defn" => tokens.push(Token::DefnKeyword),
+                    "true" => tokens.push(Token::Boolean(true)),
+                    "false" => tokens.push(Token::Boolean(false)),
+                    _ => tokens.push(Token::Name(name)),
                 }
             }
         }
@@ -82,6 +83,7 @@ pub enum Token {
 
     DefnKeyword,
 
+    Boolean(bool),
     Number(i64),
     Name(String),
 }
@@ -146,6 +148,14 @@ mod tests {
         assert_eq!(
             tokenize("123)"),
             vec![Token::Number(123), Token::ClosingParenthesis]
+        )
+    }
+
+    #[test]
+    fn test_true_false_literals() {
+        assert_eq!(
+            tokenize("true false"),
+            vec![Token::Boolean(true), Token::Boolean(false)]
         )
     }
 
