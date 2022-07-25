@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{collections::VecDeque, io::Write};
 
 use risp::{Error, Interpreter, Value};
 
@@ -14,19 +14,30 @@ fn prompt(name: &str) -> String {
 }
 
 pub fn main() {
-    println!("Welcome to RISP 🎉\n");
-    let mut interpreter = Interpreter::new();
+    let mut arguments: VecDeque<String> = std::env::args().collect();
+    arguments.pop_front();
 
-    loop {
-        let expression = prompt("> ");
+    match arguments.len() {
+        0 => {
+            println!("Welcome to RISP 🎉\n");
+            let mut interpreter = Interpreter::new();
 
-        if expression.is_empty() {
-            continue;
+            loop {
+                let expression = prompt("> ");
+
+                if expression.is_empty() {
+                    continue;
+                }
+
+                match parse_and_evaluate(&mut interpreter, &expression) {
+                    Ok(value) => println!("{}", value.to_display_string()),
+                    Err(error) => println!("{:?}", error),
+                }
+            }
         }
 
-        match parse_and_evaluate(&mut interpreter, &expression) {
-            Ok(value) => println!("{}", value.to_display_string()),
-            Err(error) => println!("{:?}", error),
+        _ => {
+            println!("risp-lang\n\nUsage: risp [filename]");
         }
     }
 }
