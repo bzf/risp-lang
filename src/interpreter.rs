@@ -108,6 +108,21 @@ impl Interpreter {
                 }
             },
 
+            "println" => match &arguments[..] {
+                [node] => {
+                    let value = self.evaluate(node)?;
+                    println!("{}", value.to_display_string());
+                    return Ok(value);
+                }
+
+                _ => {
+                    return Err(Error::new(
+                        "Wrong number of arguments",
+                        ErrorType::ArgumentError,
+                    ));
+                }
+            },
+
             name => {
                 let value = {
                     let value = self.environment_stack.get(name);
