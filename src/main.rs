@@ -25,14 +25,7 @@ pub fn main() {
         }
 
         match parse_and_evaluate(&mut interpreter, &expression) {
-            Ok(value) => match value {
-                Value::Number(number) => println!("{}", number),
-                Value::Function(function) => println!("#<Function:{}>", function.identifier()),
-                Value::Boolean(value) => println!("{}", value),
-
-                Value::Nil => println!("nil"),
-            },
-
+            Ok(value) => println!("{}", value.to_display_string()),
             Err(error) => println!("{:?}", error),
         }
     }

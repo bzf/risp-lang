@@ -17,6 +17,17 @@ pub enum Value {
 }
 
 impl Value {
+    pub fn to_display_string(&self) -> String {
+        match self {
+            Value::Number(number) => format!("{}", number),
+            Value::Function(function) => format!("#<Function:{}>", function.identifier()),
+            Value::Boolean(value) => format!("{}", value),
+            Value::Nil => format!("nil"),
+        }
+    }
+}
+
+impl Value {
     pub fn value_type(&self) -> Type {
         match self {
             Value::Number(_) => Type::Number,
