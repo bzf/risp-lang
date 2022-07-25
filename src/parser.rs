@@ -9,6 +9,13 @@ pub enum ASTNode {
     Identifier(String),
 
     CallExpression(String, Vec<ASTNode>),
+
+    IfExpression {
+        expression: Box<ASTNode>,
+        when_true: Box<ASTNode>,
+        when_false: Box<ASTNode>,
+    },
+
     FunctionDeclaration {
         identifier: String,
         parameter_list: Vec<String>,
@@ -38,6 +45,8 @@ pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<AS
             Token::OpeningParenthesis => {
                 if let Some(token) = tokens.peek() {
                     match token {
+                        Token::IfKeyword => parse_if_expression(tokens),
+
                         Token::DefnKeyword => parse_function_declaration(tokens),
 
                         Token::Name(_name) => parse_call_expression(tokens),
@@ -86,6 +95,20 @@ fn parse_call_expression(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNo
     }
 
     return Err(Error::new("Expected missing ')'", ErrorType::MissingToken));
+}
+
+fn parse_if_expression(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNode, Error> {
+    let token = tokens
+        .next()
+        .ok_or(Error::new("Missing tokens", ErrorType::MissingToken))?;
+
+    assert_eq!(Token::IfKeyword, token);
+
+    return Ok(ASTNode::IfExpression {
+        expression: Box::new(parse_node(tokens)?),
+        when_true: Box::new(parse_node(tokens)?),
+        when_false: Box::new(parse_node(tokens)?),
+    });
 }
 
 fn parse_function_declaration(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNode, Error> {
@@ -234,6 +257,29 @@ mod tests {
                 identifier: "hello-there".to_string(),
                 parameter_list: vec!["a".to_string()],
                 body: Box::new(ASTNode::NumberLiteral(123)),
+            })
+        );
+    }
+
+    #[test]
+    fn test_parsing_if_else_expression() {
+        assert_eq!(
+            parse_node(
+                &mut vec![
+                    Token::OpeningParenthesis,
+                    Token::IfKeyword,
+                    Token::Boolean(true),
+                    Token::Number(321),
+                    Token::Number(123),
+                    Token::ClosingParenthesis,
+                ]
+                .into_iter()
+                .peekable()
+            ),
+            Ok(ASTNode::IfExpression {
+                expression: Box::new(ASTNode::BooleanLiteral(true)),
+                when_true: Box::new(ASTNode::NumberLiteral(321)),
+                when_false: Box::new(ASTNode::NumberLiteral(123)),
             })
         );
     }

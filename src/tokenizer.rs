@@ -61,6 +61,7 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 }
 
                 match &name[..] {
+                    "if" => tokens.push(Token::IfKeyword),
                     "defn" => tokens.push(Token::DefnKeyword),
                     "true" => tokens.push(Token::Boolean(true)),
                     "false" => tokens.push(Token::Boolean(false)),
@@ -81,6 +82,7 @@ pub enum Token {
     OpeningBracket,
     ClosingBracket,
 
+    IfKeyword,
     DefnKeyword,
 
     Boolean(bool),

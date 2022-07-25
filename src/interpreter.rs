@@ -26,6 +26,18 @@ impl Interpreter {
                 return self.evaluate_call_expression(name, arguments);
             }
 
+            ASTNode::IfExpression {
+                ref expression,
+                ref when_true,
+                ref when_false,
+            } => {
+                if self.truthy_expression(expression)? {
+                    self.evaluate(when_true)
+                } else {
+                    self.evaluate(when_false)
+                }
+            }
+
             ASTNode::FunctionDeclaration {
                 identifier,
                 parameter_list,
@@ -140,6 +152,15 @@ impl Interpreter {
                     ))
                 }
             }
+        }
+    }
+
+    fn truthy_expression(&mut self, expression: &ASTNode) -> Result<bool, Error> {
+        match self.evaluate(expression)? {
+            Value::Number(number) => Ok(number > 0),
+            Value::Boolean(value) => Ok(value),
+            Value::Function(_) => Ok(true),
+            Value::Nil => Ok(false),
         }
     }
 

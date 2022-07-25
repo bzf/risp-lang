@@ -40,3 +40,10 @@ cargo run
 > (hello 10)
 3
 ```
+
+```lisp
+> (if true 1 0)
+1
+> (if false 1 0)
+0
+```
