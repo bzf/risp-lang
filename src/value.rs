@@ -3,6 +3,7 @@ use crate::ASTNode;
 #[derive(Debug, PartialEq)]
 pub enum Type {
     Number,
+    Function,
     Nil,
 }
 
@@ -18,7 +19,7 @@ impl Value {
         match self {
             Value::Number(_) => Type::Number,
 
-            Value::Function(_) => Type::Nil,
+            Value::Function(_) => Type::Function,
             Value::Nil => Type::Nil,
         }
     }
