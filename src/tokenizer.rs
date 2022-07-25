@@ -1,3 +1,20 @@
+#[derive(Debug, Clone, PartialEq)]
+pub enum Token {
+    OpeningParenthesis,
+    ClosingParenthesis,
+    NegativeSymbol,
+    OpeningBracket,
+    ClosingBracket,
+
+    IfKeyword,
+    DefnKeyword,
+
+    String(String),
+    Boolean(bool),
+    Number(i64),
+    Name(String),
+}
+
 pub fn tokenize(input: &str) -> Vec<Token> {
     let mut cursor = input.chars().peekable();
     let mut tokens = vec![];
@@ -32,6 +49,20 @@ pub fn tokenize(input: &str) -> Vec<Token> {
 
             ')' => {
                 tokens.push(Token::ClosingParenthesis);
+            }
+
+            '"' => {
+                let mut value_string = String::new();
+
+                while let Some(next_character) = cursor.next() {
+                    if next_character != '"' {
+                        value_string.push(next_character);
+                    } else {
+                        break;
+                    }
+                }
+
+                tokens.push(Token::String(value_string));
             }
 
             '[' => {
@@ -74,28 +105,12 @@ pub fn tokenize(input: &str) -> Vec<Token> {
     return tokens;
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Token {
-    OpeningParenthesis,
-    ClosingParenthesis,
-    NegativeSymbol,
-    OpeningBracket,
-    ClosingBracket,
-
-    IfKeyword,
-    DefnKeyword,
-
-    Boolean(bool),
-    Number(i64),
-    Name(String),
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_parsing_parens() {
+    fn test_parsing_symbols() {
         assert_eq!(
             tokenize("()"),
             vec![Token::OpeningParenthesis, Token::ClosingParenthesis,]
@@ -142,6 +157,16 @@ mod tests {
         assert_eq!(
             tokenize("name)"),
             vec![Token::Name("name".to_string()), Token::ClosingParenthesis]
+        )
+    }
+
+    #[test]
+    fn test_parsing_strings() {
+        assert_eq!(tokenize(r#""""#), vec![Token::String("".to_string())]);
+
+        assert_eq!(
+            tokenize(r#""this is my string""#),
+            vec![Token::String("this is my string".to_string())]
         )
     }
 

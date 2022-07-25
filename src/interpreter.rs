@@ -55,6 +55,10 @@ impl Interpreter {
                 return Ok(Value::Function(function));
             }
 
+            ASTNode::StringLiteral(string) => {
+                return Ok(Value::String(string.to_string()));
+            }
+
             ASTNode::Identifier(name) => {
                 if let Some(value) = self.environment_stack.get(name) {
                     return Ok(value.clone());
@@ -174,6 +178,7 @@ impl Interpreter {
         match self.evaluate(expression)? {
             Value::Number(number) => Ok(number > 0),
             Value::Boolean(value) => Ok(value),
+            Value::String(value) => Ok(value.len() > 0),
             Value::Function(_) => Ok(true),
             Value::Nil => Ok(false),
         }

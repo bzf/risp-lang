@@ -7,6 +7,7 @@ pub enum ASTNode {
     NumberLiteral(i64),
     BooleanLiteral(bool),
     Identifier(String),
+    StringLiteral(String),
 
     CallExpression(String, Vec<ASTNode>),
 
@@ -28,6 +29,7 @@ pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<AS
         match token {
             Token::Number(number) => Ok(ASTNode::NumberLiteral(number)),
             Token::Boolean(value) => Ok(ASTNode::BooleanLiteral(value)),
+            Token::String(value) => Ok(ASTNode::StringLiteral(value)),
 
             Token::Name(name) => Ok(ASTNode::Identifier(name)),
 
