@@ -39,6 +39,13 @@ cargo run
 #<Function:hello>
 > (hello 10)
 3
+> (defn count [a]
+    (if (is-empty a) 0 (add (count (cdr a)) 1)))
+#<Function:hello>
+> (count (list))
+0
+> (count (list 1 2 3))
+3
 ```
 
 ```lisp
@@ -83,4 +90,23 @@ $ cat example.rsp
 $ cargo run -- example.rsp 2>/dev/null
 3
 125
+
+# Implementing count and reverse
+$ cat example.rsp
+(define my-list (list 1 2 3))
+(println "my-list =" my-list)
+
+(defn count [a]
+  (if (is-empty a) 0 (add (count (cdr a)) 1)))
+
+(println "count:" (count my-list))
+
+(defn reverse [a]
+  (if (is-empty a) (list) (append (reverse (cdr a)) (car a))))
+
+(println "reverse:" (reverse my-list))
+$ cargo run -- example.rsp 2>/dev/null
+my-list = (1 2 3)
+count: 3
+reverse: (3 2 1)
 ```
