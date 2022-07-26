@@ -1,22 +1,22 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use crate::Value;
 
 pub struct EnvironmentStack {
     global_environment: Environment,
-    environments: Vec<Environment>,
+    environments: VecDeque<Environment>,
 }
 
 impl EnvironmentStack {
     pub fn new() -> Self {
         Self {
             global_environment: Environment::new(),
-            environments: Vec::new(),
+            environments: VecDeque::new(),
         }
     }
 
     pub fn set(&mut self, name: &str, value: Value) {
-        if let Some(environment) = self.environments.last_mut() {
+        if let Some(environment) = self.environments.back_mut() {
             environment.set(name, value);
         } else {
             self.global_environment.set(name, value)
@@ -34,14 +34,15 @@ impl EnvironmentStack {
     }
 
     pub fn push_environment(&mut self, variables: HashMap<String, Value>) {
-        self.environments.push(Environment { variables });
+        self.environments.push_front(Environment { variables });
     }
 
     pub fn pop_environment(&mut self) {
-        self.environments.pop();
+        self.environments.pop_front();
     }
 }
 
+#[derive(Debug)]
 struct Environment {
     variables: HashMap<String, Value>,
 }
@@ -85,10 +86,22 @@ mod tests {
         environment_stack.set("my-var", Value::Number(3));
         assert_eq!(environment_stack.get("my-var"), Some(Value::Number(3)));
 
-        let mut arguments = HashMap::new();
-        arguments.insert("my-var".to_string(), Value::Number(2));
-        environment_stack.push_environment(arguments);
-        assert_eq!(environment_stack.get("my-var"), Some(Value::Number(2)));
+        {
+            let mut arguments = HashMap::new();
+            arguments.insert("my-var".to_string(), Value::Number(2));
+            environment_stack.push_environment(arguments);
+            assert_eq!(environment_stack.get("my-var"), Some(Value::Number(2)));
+        }
+
+        {
+            let mut arguments = HashMap::new();
+            arguments.insert("my-var".to_string(), Value::Number(5));
+            environment_stack.push_environment(arguments);
+            assert_eq!(environment_stack.get("my-var"), Some(Value::Number(5)));
+        }
+
+        environment_stack.pop_environment();
+        environment_stack.pop_environment();
 
         environment_stack.pop_environment();
         assert_eq!(environment_stack.get("my-var"), Some(Value::Number(3)));
