@@ -1,5 +1,5 @@
-rappendisp
-====
+risp-lang
+=========
 
 A Lisp interpreter written in Rust for fun and giggles.
 
