@@ -44,6 +44,12 @@ pub fn tokenize(input: &str) -> Vec<Token> {
         }
 
         match character {
+            ';' => loop {
+                if Some('\n') == cursor.next() {
+                    break;
+                }
+            },
+
             '(' => {
                 tokens.push(Token::OpeningParenthesis);
             }
@@ -192,5 +198,13 @@ mod tests {
     #[test]
     fn test_ignore_whitespace() {
         assert_eq!(tokenize("               "), vec![],)
+    }
+
+    #[test]
+    fn test_ignore_commented_lines() {
+        assert_eq!(
+            tokenize("1 ; hello there\n; my frend\n1"),
+            vec![Token::Number(1), Token::Number(1)]
+        )
     }
 }
