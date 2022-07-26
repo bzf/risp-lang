@@ -51,6 +51,16 @@ cargo run
 ```lisp
 > (list 1 2 3)
 (1 2 3)
+> (define foo (list 1 2 3))
+(1 2 3)
+> (car foo)
+1
+> (cdr foo)
+(2 3)
+> (is-empty foo)
+false
+> (is-empty (list))
+true
 ```
 
 ```sh

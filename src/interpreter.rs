@@ -1,8 +1,11 @@
 mod environment;
 
-use std::{collections::HashMap, ops::Deref};
+use std::{
+    collections::{HashMap, VecDeque},
+    ops::Deref,
+};
 
-use crate::{parser::parse, tokenize, value::Function, ASTNode, Error, ErrorType, Value};
+use crate::{parser::parse, tokenize, value::Function, ASTNode, Error, ErrorType, Type, Value};
 use environment::EnvironmentStack;
 
 pub struct Interpreter {
@@ -126,6 +129,95 @@ impl Interpreter {
                     let value = self.evaluate(value_node)?;
                     self.environment_stack.set(name, value.clone());
                     return Ok(value);
+                }
+
+                _ => {
+                    return Err(Error::new(
+                        "Wrong number of arguments",
+                        ErrorType::ArgumentError,
+                    ));
+                }
+            },
+
+            "car" => match &arguments[..] {
+                [value_node] => {
+                    let value = self.evaluate(value_node)?;
+
+                    match value {
+                        Value::List(values) => {
+                            let mut cloned_values: VecDeque<Value> = VecDeque::from(values);
+                            return Ok(cloned_values.pop_front().unwrap_or(Value::Nil));
+                        }
+
+                        _ => {
+                            return Err(Error::new(
+                                "Type error",
+                                ErrorType::TypeError {
+                                    expected_type: Type::List,
+                                    actual_type: value.value_type(),
+                                },
+                            ))
+                        }
+                    }
+                }
+
+                _ => {
+                    return Err(Error::new(
+                        "Wrong number of arguments",
+                        ErrorType::ArgumentError,
+                    ));
+                }
+            },
+
+            "is-empty" => match &arguments[..] {
+                [value_node] => {
+                    let value = self.evaluate(value_node)?;
+
+                    match value {
+                        Value::List(values) => Ok(Value::Boolean(values.is_empty())),
+
+                        _ => {
+                            return Err(Error::new(
+                                "Type error",
+                                ErrorType::TypeError {
+                                    expected_type: Type::List,
+                                    actual_type: value.value_type(),
+                                },
+                            ))
+                        }
+                    }
+                }
+
+                _ => {
+                    return Err(Error::new(
+                        "Wrong number of arguments",
+                        ErrorType::ArgumentError,
+                    ));
+                }
+            },
+
+            "cdr" => match &arguments[..] {
+                [value_node] => {
+                    let value = self.evaluate(value_node)?;
+
+                    match value {
+                        Value::List(values) => {
+                            let mut cloned_values: VecDeque<Value> = VecDeque::from(values);
+                            cloned_values.pop_front();
+
+                            return Ok(Value::List(cloned_values.into_iter().collect()));
+                        }
+
+                        _ => {
+                            return Err(Error::new(
+                                "Type error",
+                                ErrorType::TypeError {
+                                    expected_type: Type::List,
+                                    actual_type: value.value_type(),
+                                },
+                            ))
+                        }
+                    }
                 }
 
                 _ => {
