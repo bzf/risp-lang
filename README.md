@@ -1,4 +1,4 @@
-risp
+rappendisp
 ====
 
 A Lisp interpreter written in Rust for fun and giggles.
@@ -69,6 +69,8 @@ true
 (1 2 3)
 > (append foo 1)
 (1 2 3 1)
+> (prepend foo 1)
+(1 1 2 3)
 > (car foo)
 1
 > (cdr foo)
