@@ -58,7 +58,7 @@ impl Interpreter {
                 ref when_true,
                 ref when_false,
             } => {
-                if self.truthy_expression(expression)? {
+                if self.evaluate(expression)?.is_truthy() {
                     self.evaluate(when_true)
                 } else {
                     self.evaluate(when_false)
@@ -287,17 +287,6 @@ impl Interpreter {
                     ))
                 }
             }
-        }
-    }
-
-    fn truthy_expression(&mut self, expression: &ASTNode) -> Result<bool, Error> {
-        match self.evaluate(expression)? {
-            Value::Number(number) => Ok(number > 0),
-            Value::Boolean(value) => Ok(value),
-            Value::String(value) => Ok(value.len() > 0),
-            Value::List(value) => Ok(!value.is_empty()),
-            Value::Function(_) => Ok(true),
-            Value::Nil => Ok(false),
         }
     }
 

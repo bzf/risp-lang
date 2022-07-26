@@ -21,6 +21,17 @@ pub enum Value {
 }
 
 impl Value {
+    pub fn is_truthy(&self) -> bool {
+        match self {
+            Value::Number(number) => number > &0,
+            Value::Boolean(value) => *value,
+            Value::String(value) => value.len() > 0,
+            Value::List(value) => !value.is_empty(),
+            Value::Function(_) => true,
+            Value::Nil => false,
+        }
+    }
+
     pub fn to_display_string(&self) -> String {
         match self {
             Value::Number(number) => format!("{}", number),
