@@ -10,6 +10,7 @@ pub enum ASTNode {
     StringLiteral(String),
 
     CallExpression(String, Vec<ASTNode>),
+    ListExpression(Vec<ASTNode>),
 
     IfExpression {
         expression: Box<ASTNode>,
@@ -62,6 +63,8 @@ pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<AS
                 if let Some(token) = tokens.peek() {
                     match token {
                         Token::IfKeyword => parse_if_expression(tokens),
+
+                        Token::ListKeyword => parse_list_expression(tokens),
 
                         Token::DefnKeyword => parse_function_declaration(tokens),
 
@@ -134,6 +137,35 @@ fn parse_if_expression(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNode
     }
 
     return Ok(expression);
+}
+
+fn parse_list_expression(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNode, Error> {
+    let token = tokens
+        .next()
+        .ok_or(Error::new("Missing tokens", ErrorType::MissingToken))?;
+
+    assert_eq!(Token::ListKeyword, token);
+
+    let mut expressions = Vec::new();
+
+    while let Some(next_token) = tokens.peek() {
+        match next_token {
+            Token::ClosingParenthesis => break,
+
+            _ => {
+                expressions.push(parse_node(tokens)?);
+            }
+        }
+    }
+
+    {
+        let token = tokens
+            .next()
+            .ok_or(Error::new("Missing tokens", ErrorType::MissingToken))?;
+        assert_eq!(Token::ClosingParenthesis, token);
+    }
+
+    return Ok(ASTNode::ListExpression(expressions));
 }
 
 fn parse_function_declaration(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNode, Error> {
@@ -288,6 +320,28 @@ mod tests {
                 parameter_list: vec!["a".to_string()],
                 body: Box::new(ASTNode::NumberLiteral(123)),
             })
+        );
+        assert_eq!(tokens.peek(), None, "Has left-over tokens");
+    }
+
+    #[test]
+    fn test_parsing_list_expression() {
+        let mut tokens = vec![
+            Token::OpeningParenthesis,
+            Token::ListKeyword,
+            Token::String("a".to_string()),
+            Token::Number(123),
+            Token::ClosingParenthesis,
+        ]
+        .into_iter()
+        .peekable();
+
+        assert_eq!(
+            parse_node(&mut tokens),
+            Ok(ASTNode::ListExpression(vec![
+                ASTNode::StringLiteral("a".to_string()),
+                ASTNode::NumberLiteral(123),
+            ]))
         );
         assert_eq!(tokens.peek(), None, "Has left-over tokens");
     }

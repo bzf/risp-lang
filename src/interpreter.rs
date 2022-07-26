@@ -34,6 +34,16 @@ impl Interpreter {
         match expression {
             ASTNode::NumberLiteral(number) => Ok(Value::Number(*number)),
 
+            ASTNode::ListExpression(expressions) => {
+                let mut values = vec![];
+
+                for expression in expressions.iter() {
+                    values.push(self.evaluate(expression)?);
+                }
+
+                Ok(Value::List(values))
+            }
+
             ASTNode::BooleanLiteral(value) => Ok(Value::Boolean(*value)),
 
             ASTNode::CallExpression(ref name, ref arguments) => {
@@ -193,6 +203,7 @@ impl Interpreter {
             Value::Number(number) => Ok(number > 0),
             Value::Boolean(value) => Ok(value),
             Value::String(value) => Ok(value.len() > 0),
+            Value::List(value) => Ok(!value.is_empty()),
             Value::Function(_) => Ok(true),
             Value::Nil => Ok(false),
         }

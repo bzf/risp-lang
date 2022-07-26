@@ -8,6 +8,7 @@ pub enum Token {
 
     IfKeyword,
     DefnKeyword,
+    ListKeyword,
 
     String(String),
     Boolean(bool),
@@ -94,6 +95,7 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 match &name[..] {
                     "if" => tokens.push(Token::IfKeyword),
                     "defn" => tokens.push(Token::DefnKeyword),
+                    "list" => tokens.push(Token::ListKeyword),
                     "true" => tokens.push(Token::Boolean(true)),
                     "false" => tokens.push(Token::Boolean(false)),
                     _ => tokens.push(Token::Name(name)),
@@ -120,9 +122,10 @@ mod tests {
     #[test]
     fn test_parsing_parameter_list() {
         assert_eq!(
-            tokenize("defn [a b c]"),
+            tokenize("defn list [a b c]"),
             vec![
                 Token::DefnKeyword,
+                Token::ListKeyword,
                 Token::OpeningBracket,
                 Token::Name("a".to_string()),
                 Token::Name("b".to_string()),

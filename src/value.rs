@@ -4,6 +4,7 @@ use crate::ASTNode;
 pub enum Type {
     Number,
     String,
+    List,
     Boolean,
     Function,
     Nil,
@@ -13,6 +14,7 @@ pub enum Type {
 pub enum Value {
     Number(i64),
     String(String),
+    List(Vec<Value>),
     Function(Function),
     Boolean(bool),
     Nil,
@@ -25,6 +27,16 @@ impl Value {
             Value::String(string) => string.clone(),
             Value::Function(function) => format!("#<Function:{}>", function.identifier()),
             Value::Boolean(value) => format!("{}", value),
+            Value::List(value) => {
+                format!(
+                    "({})",
+                    value
+                        .iter()
+                        .map(|v| v.to_display_string())
+                        .collect::<Vec<String>>()
+                        .join(" ")
+                )
+            }
             Value::Nil => format!("nil"),
         }
     }
@@ -36,6 +48,7 @@ impl Value {
             Value::Number(_) => Type::Number,
             Value::String(_) => Type::String,
             Value::Boolean(_) => Type::Boolean,
+            Value::List(_) => Type::List,
 
             Value::Function(_) => Type::Function,
             Value::Nil => Type::Nil,

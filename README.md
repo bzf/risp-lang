@@ -48,6 +48,11 @@ cargo run
 0
 ```
 
+```lisp
+> (list 1 2 3)
+(1 2 3)
+```
+
 ```sh
 # Running a program from a file
 $ cat example.rsp
