@@ -49,6 +49,13 @@ cargo run
 ```
 
 ```lisp
+> (is-nil 1)
+false
+> (is-nil nil)
+true
+```
+
+```lisp
 > (list 1 2 3)
 (1 2 3)
 > (define foo (list 1 2 3))

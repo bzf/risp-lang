@@ -196,6 +196,17 @@ impl Interpreter {
                 }
             },
 
+            "is-nil" => match &arguments[..] {
+                [value_node] => Ok(Value::Boolean(self.evaluate(value_node)?.is_nil())),
+
+                _ => {
+                    return Err(Error::new(
+                        "Wrong number of arguments",
+                        ErrorType::ArgumentError,
+                    ));
+                }
+            },
+
             "cdr" => match &arguments[..] {
                 [value_node] => {
                     let value = self.evaluate(value_node)?;

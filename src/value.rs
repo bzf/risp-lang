@@ -32,6 +32,13 @@ impl Value {
         }
     }
 
+    pub fn is_nil(&self) -> bool {
+        match self {
+            Value::Nil => true,
+            _ => false,
+        }
+    }
+
     pub fn to_display_string(&self) -> String {
         match self {
             Value::Number(number) => format!("{}", number),
