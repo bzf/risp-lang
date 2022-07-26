@@ -1,6 +1,14 @@
-use std::{collections::VecDeque, io::Write};
-
 use risp::{Error, Interpreter, Value};
+use std::io::Write;
+
+use clap::Parser;
+
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+struct Cli {
+    #[clap(value_parser)]
+    filename: Option<String>,
+}
 
 fn prompt(name: &str) -> String {
     let mut line = String::new();
@@ -14,11 +22,14 @@ fn prompt(name: &str) -> String {
 }
 
 pub fn main() {
-    let mut arguments: VecDeque<String> = std::env::args().collect();
-    arguments.pop_front();
+    let cli = Cli::parse();
 
-    match arguments.len() {
-        0 => {
+    match &cli.filename {
+        Some(_) => {
+            todo!("Can't run programs yet")
+        }
+
+        None => {
             println!("Welcome to RISP 🎉\n");
             let mut interpreter = Interpreter::new();
 
@@ -34,10 +45,6 @@ pub fn main() {
                     Err(error) => println!("{:?}", error),
                 }
             }
-        }
-
-        _ => {
-            println!("risp-lang\n\nUsage: risp [filename]");
         }
     }
 }
