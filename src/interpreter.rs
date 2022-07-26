@@ -272,17 +272,23 @@ impl Interpreter {
             },
 
             "println" => match &arguments[..] {
-                [node] => {
-                    let value = self.evaluate(node)?;
-                    println!("{}", value.to_display_string());
-                    return Ok(value);
-                }
+                nodes => {
+                    let mut values = Vec::new();
 
-                _ => {
-                    return Err(Error::new(
-                        "Wrong number of arguments",
-                        ErrorType::ArgumentError,
-                    ));
+                    for node in nodes.iter() {
+                        values.push(self.evaluate(node)?);
+                    }
+
+                    println!(
+                        "{}",
+                        values
+                            .iter()
+                            .map(|a| a.to_display_string())
+                            .collect::<Vec<String>>()
+                            .join(" ")
+                    );
+
+                    return Ok(Value::List(values));
                 }
             },
 
