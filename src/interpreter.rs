@@ -196,6 +196,38 @@ impl Interpreter {
                 }
             },
 
+            "append" => match &arguments[..] {
+                [list_node, value_node] => {
+                    let list = self.evaluate(list_node)?;
+                    let value = self.evaluate(value_node)?;
+
+                    match (list, &value) {
+                        (Value::List(values), value) => {
+                            let mut new_values = values.clone();
+                            new_values.push(value.clone());
+                            Ok(Value::List(new_values))
+                        }
+
+                        _ => {
+                            return Err(Error::new(
+                                "Type error",
+                                ErrorType::TypeError {
+                                    expected_type: Type::List,
+                                    actual_type: value.value_type(),
+                                },
+                            ))
+                        }
+                    }
+                }
+
+                _ => {
+                    return Err(Error::new(
+                        "Wrong number of arguments",
+                        ErrorType::ArgumentError,
+                    ));
+                }
+            },
+
             "is-nil" => match &arguments[..] {
                 [value_node] => Ok(Value::Boolean(self.evaluate(value_node)?.is_nil())),
 

@@ -60,6 +60,8 @@ true
 (1 2 3)
 > (define foo (list 1 2 3))
 (1 2 3)
+> (append foo 1)
+(1 2 3 1)
 > (car foo)
 1
 > (cdr foo)
