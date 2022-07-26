@@ -106,11 +106,20 @@ fn parse_if_expression(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNode
 
     assert_eq!(Token::IfKeyword, token);
 
-    return Ok(ASTNode::IfExpression {
+    let expression = ASTNode::IfExpression {
         expression: Box::new(parse_node(tokens)?),
         when_true: Box::new(parse_node(tokens)?),
         when_false: Box::new(parse_node(tokens)?),
-    });
+    };
+
+    {
+        let token = tokens
+            .next()
+            .ok_or(Error::new("Missing tokens", ErrorType::MissingToken))?;
+        assert_eq!(Token::ClosingParenthesis, token);
+    }
+
+    return Ok(expression);
 }
 
 fn parse_function_declaration(tokens: &mut Peekable<IntoIter<Token>>) -> Result<ASTNode, Error> {
@@ -159,6 +168,13 @@ fn parse_function_declaration(tokens: &mut Peekable<IntoIter<Token>>) -> Result<
 
     let body = parse_node(tokens)?;
 
+    {
+        let token = tokens
+            .next()
+            .ok_or(Error::new("Missing tokens", ErrorType::MissingToken))?;
+        assert_eq!(Token::ClosingParenthesis, token);
+    }
+
     return Ok(ASTNode::FunctionDeclaration {
         identifier,
         parameter_list,
@@ -172,117 +188,117 @@ mod tests {
 
     #[test]
     fn test_parsing_negative_number_literals() {
-        assert_eq!(
-            parse_node(
-                &mut vec![Token::NegativeSymbol, Token::Number(123)]
-                    .into_iter()
-                    .peekable()
-            ),
-            Ok(ASTNode::NumberLiteral(-123))
-        )
+        let mut tokens = vec![Token::NegativeSymbol, Token::Number(123)]
+            .into_iter()
+            .peekable();
+
+        assert_eq!(parse_node(&mut tokens), Ok(ASTNode::NumberLiteral(-123)));
+        assert_eq!(tokens.peek(), None, "Has left-over tokens");
     }
 
     #[test]
     fn test_parsing_number_literal() {
-        assert_eq!(
-            parse_node(&mut vec![Token::Number(123)].into_iter().peekable()),
-            Ok(ASTNode::NumberLiteral(123))
-        )
+        let mut tokens = vec![Token::Number(123)].into_iter().peekable();
+
+        assert_eq!(parse_node(&mut tokens), Ok(ASTNode::NumberLiteral(123)));
+        assert_eq!(tokens.peek(), None, "Has left-over tokens");
     }
 
     #[test]
     fn test_parsing_identifier() {
+        let mut tokens = vec![Token::Name("hello-there".to_string())]
+            .into_iter()
+            .peekable();
+
         assert_eq!(
-            parse_node(
-                &mut vec![Token::Name("hello-there".to_string())]
-                    .into_iter()
-                    .peekable()
-            ),
+            parse_node(&mut tokens),
             Ok(ASTNode::Identifier("hello-there".to_string()))
-        )
+        );
+        assert_eq!(tokens.peek(), None, "Has left-over tokens");
     }
 
     #[test]
     fn test_parsing_call_expression() {
+        let mut tokens = vec![
+            Token::OpeningParenthesis,
+            Token::Name("hello-there".to_string()),
+            Token::Number(123),
+            Token::ClosingParenthesis,
+        ]
+        .into_iter()
+        .peekable();
+
         assert_eq!(
-            parse_node(
-                &mut vec![
-                    Token::OpeningParenthesis,
-                    Token::Name("hello-there".to_string()),
-                    Token::Number(123),
-                    Token::ClosingParenthesis,
-                ]
-                .into_iter()
-                .peekable()
-            ),
+            parse_node(&mut tokens),
             Ok(ASTNode::CallExpression(
                 "hello-there".to_string(),
                 vec![ASTNode::NumberLiteral(123)]
             ))
-        )
+        );
+        assert_eq!(tokens.peek(), None, "Has left-over tokens");
     }
 
     #[test]
     fn test_parsing_true_literals() {
-        assert_eq!(
-            parse_node(&mut vec![Token::Boolean(true)].into_iter().peekable()),
-            Ok(ASTNode::BooleanLiteral(true))
-        )
+        let mut tokens = vec![Token::Boolean(true)].into_iter().peekable();
+        assert_eq!(parse_node(&mut tokens), Ok(ASTNode::BooleanLiteral(true)));
+        assert_eq!(tokens.peek(), None, "Has left-over tokens");
     }
 
     #[test]
     fn test_parsing_false_literals() {
-        assert_eq!(
-            parse_node(&mut vec![Token::Boolean(false)].into_iter().peekable()),
-            Ok(ASTNode::BooleanLiteral(false))
-        )
+        let mut tokens = vec![Token::Boolean(false)].into_iter().peekable();
+        assert_eq!(parse_node(&mut tokens), Ok(ASTNode::BooleanLiteral(false)));
+        assert_eq!(tokens.peek(), None, "Has left-over tokens");
     }
 
     #[test]
     fn test_parsing_function_declaration() {
+        let mut tokens = vec![
+            Token::OpeningParenthesis,
+            Token::DefnKeyword,
+            Token::Name("hello-there".to_string()),
+            Token::OpeningBracket,
+            Token::Name("a".to_string()),
+            Token::ClosingBracket,
+            Token::Number(123),
+            Token::ClosingParenthesis,
+        ]
+        .into_iter()
+        .peekable();
+
         assert_eq!(
-            parse_node(
-                &mut vec![
-                    Token::OpeningParenthesis,
-                    Token::DefnKeyword,
-                    Token::Name("hello-there".to_string()),
-                    Token::OpeningBracket,
-                    Token::Name("a".to_string()),
-                    Token::ClosingBracket,
-                    Token::Number(123),
-                    Token::ClosingParenthesis,
-                ]
-                .into_iter()
-                .peekable()
-            ),
+            parse_node(&mut tokens),
             Ok(ASTNode::FunctionDeclaration {
                 identifier: "hello-there".to_string(),
                 parameter_list: vec!["a".to_string()],
                 body: Box::new(ASTNode::NumberLiteral(123)),
             })
         );
+        assert_eq!(tokens.peek(), None, "Has left-over tokens");
     }
 
     #[test]
     fn test_parsing_if_else_expression() {
+        let mut tokens = &mut vec![
+            Token::OpeningParenthesis,
+            Token::IfKeyword,
+            Token::Boolean(true),
+            Token::Number(321),
+            Token::Number(123),
+            Token::ClosingParenthesis,
+        ]
+        .into_iter()
+        .peekable();
+
         assert_eq!(
-            parse_node(
-                &mut vec![
-                    Token::OpeningParenthesis,
-                    Token::IfKeyword,
-                    Token::Boolean(true),
-                    Token::Number(321),
-                    Token::Number(123),
-                    Token::ClosingParenthesis,
-                ]
-                .into_iter()
-                .peekable()
-            ),
+            parse_node(&mut tokens),
             Ok(ASTNode::IfExpression {
                 expression: Box::new(ASTNode::BooleanLiteral(true)),
                 when_true: Box::new(ASTNode::NumberLiteral(321)),
                 when_false: Box::new(ASTNode::NumberLiteral(123)),
             })
         );
+        assert_eq!(tokens.peek(), None, "Has left-over tokens");
     }
 }
