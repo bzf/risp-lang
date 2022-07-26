@@ -24,6 +24,20 @@ pub enum ASTNode {
     },
 }
 
+pub fn parse(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<Vec<ASTNode>, Error> {
+    let mut nodes = Vec::new();
+
+    loop {
+        if tokens.len() > 0 {
+            nodes.push(parse_node(tokens)?);
+        } else {
+            break;
+        }
+    }
+
+    return Ok(nodes);
+}
+
 pub fn parse_node(tokens: &mut Peekable<std::vec::IntoIter<Token>>) -> Result<ASTNode, Error> {
     if let Some(token) = tokens.next() {
         match token {
@@ -298,6 +312,23 @@ mod tests {
                 when_true: Box::new(ASTNode::NumberLiteral(321)),
                 when_false: Box::new(ASTNode::NumberLiteral(123)),
             })
+        );
+        assert_eq!(tokens.peek(), None, "Has left-over tokens");
+    }
+
+    #[test]
+    fn test_parsing_multiple_expressions() {
+        let mut tokens = vec![Token::Boolean(true), Token::Number(321), Token::Number(123)]
+            .into_iter()
+            .peekable();
+
+        assert_eq!(
+            parse(&mut tokens),
+            Ok(vec![
+                ASTNode::BooleanLiteral(true),
+                ASTNode::NumberLiteral(321),
+                ASTNode::NumberLiteral(123),
+            ])
         );
         assert_eq!(tokens.peek(), None, "Has left-over tokens");
     }

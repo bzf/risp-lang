@@ -25,8 +25,16 @@ pub fn main() {
     let cli = Cli::parse();
 
     match &cli.filename {
-        Some(_) => {
-            todo!("Can't run programs yet")
+        Some(filename) => {
+            let mut interpreter = Interpreter::new();
+
+            match interpreter.evaluate_file(&filename) {
+                Ok(_) => (),
+                Err(error) => {
+                    println!("{:?}", error);
+                    std::process::exit(1);
+                }
+            }
         }
 
         None => {

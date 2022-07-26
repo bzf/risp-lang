@@ -19,6 +19,7 @@ pub enum ErrorType {
     ArgumentError,
     NotAFunction(String),
     TooFewArguments,
+    IOError(std::io::ErrorKind),
     TypeError {
         expected_type: Type,
         actual_type: Type,

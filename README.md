@@ -47,3 +47,16 @@ cargo run
 > (if false 1 0)
 0
 ```
+
+```sh
+# Running a program from a file
+$ cat example.rsp
+(defn add-two [a] (add a 2))
+
+(define a 123)
+(println (add-two 1))
+(println (add-two a))
+$ cargo run -- example.rsp 2>/dev/null
+3
+125
+```

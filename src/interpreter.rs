@@ -2,7 +2,7 @@ mod environment;
 
 use std::{collections::HashMap, ops::Deref};
 
-use crate::{value::Function, ASTNode, Error, ErrorType, Value};
+use crate::{parser::parse, tokenize, value::Function, ASTNode, Error, ErrorType, Value};
 use environment::EnvironmentStack;
 
 pub struct Interpreter {
@@ -14,6 +14,20 @@ impl Interpreter {
         Self {
             environment_stack: EnvironmentStack::new(),
         }
+    }
+
+    pub fn evaluate_file(&mut self, filepath: &str) -> Result<(), Error> {
+        let file_content = std::fs::read_to_string(filepath)
+            .map_err(|error| Error::new("IO error", ErrorType::IOError(error.kind())))?;
+
+        let tokens = tokenize(&file_content);
+        let expressions = parse(&mut tokens.into_iter().peekable())?;
+
+        for expression in expressions.iter() {
+            self.evaluate(expression)?;
+        }
+
+        return Ok(());
     }
 
     pub fn evaluate(&mut self, expression: &ASTNode) -> Result<Value, Error> {
