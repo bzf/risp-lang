@@ -17,24 +17,24 @@ cargo run
 
 ## Examples
 
-```lisp
+```scheme
 > (add 1 2 3)
 6
 ```
 
-```lisp
+```scheme
 > (subtract 3 2)
 1
 ```
 
-```lisp
+```scheme
 > (define foo (add 5 5))
 10
 > (add foo 5)
 15
 ```
 
-```lisp
+```scheme
 > (defn hello [a] 3)
 #<Function:hello>
 > (hello 10)
@@ -48,21 +48,21 @@ cargo run
 3
 ```
 
-```lisp
+```scheme
 > (if true 1 0)
 1
 > (if false 1 0)
 0
 ```
 
-```lisp
+```scheme
 > (is-nil 1)
 false
 > (is-nil nil)
 true
 ```
 
-```lisp
+```scheme
 > (list 1 2 3)
 (1 2 3)
 > (define foo (list 1 2 3))
